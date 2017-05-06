@@ -1,7 +1,6 @@
 {
     "name": "philiprehberger/php-password-strength",
     "description": "Password strength validation with entropy calculation and common password detection",
-    "version": "1.0.0",
     "type": "library",
     "license": "MIT",
     "keywords": [
@@ -14,7 +13,9 @@
     "homepage": "https://github.com/philiprehberger/php-password-strength",
     "authors": [
         {
-            "name": "Philip Rehberger"
+            "name": "Philip Rehberger",
+            "email": "me@philiprehberger.com",
+            "role": "Developer"
         }
     ],
     "require": {
@@ -40,6 +41,6 @@
         "lint": "vendor/bin/pint",
         "analyse": "vendor/bin/phpstan analyse"
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }
