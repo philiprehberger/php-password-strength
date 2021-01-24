@@ -73,6 +73,35 @@ final class PasswordStrength
     }
 
     /**
+     * Analyze a password and return a detailed strength report.
+     */
+    public static function analyze(string $password): StrengthReport
+    {
+        $result = self::check($password);
+        $patterns = self::detectPatterns($password);
+
+        return new StrengthReport(
+            score: $result->score,
+            level: $result->label(),
+            hasLowercase: (bool) preg_match('/[a-z]/', $password),
+            hasUppercase: (bool) preg_match('/[A-Z]/', $password),
+            hasDigits: (bool) preg_match('/[0-9]/', $password),
+            hasSymbols: (bool) preg_match('/[^a-zA-Z0-9]/', $password),
+            hasRepeatedChars: in_array('repeated', $patterns, true),
+            hasSequentialChars: in_array('sequential', $patterns, true),
+            length: $result->length,
+        );
+    }
+
+    /**
+     * Check if a password meets a given policy.
+     */
+    public static function meetsPolicy(string $password, PasswordPolicy $policy): bool
+    {
+        return $policy->check($password);
+    }
+
+    /**
      * Calculate Shannon entropy in bits.
      */
     private static function calculateEntropy(string $password): float
