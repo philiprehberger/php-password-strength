@@ -6,6 +6,7 @@ namespace PhilipRehberger\PasswordStrength\Tests;
 
 use PhilipRehberger\PasswordStrength\PasswordPolicy;
 use PhilipRehberger\PasswordStrength\PasswordStrength;
+use PhilipRehberger\PasswordStrength\PendingAnalysis;
 use PhilipRehberger\PasswordStrength\StrengthReport;
 use PhilipRehberger\PasswordStrength\StrengthResult;
 use PHPUnit\Framework\Attributes\Test;
@@ -13,6 +14,11 @@ use PHPUnit\Framework\TestCase;
 
 final class PasswordStrengthTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        PasswordStrength::clearDictionaries();
+    }
+
     #[Test]
     public function empty_password_scores_zero(): void
     {
@@ -292,5 +298,149 @@ final class PasswordStrengthTest extends TestCase
         $policy = new PasswordPolicy;
 
         $this->assertTrue($policy->check('a'));
+    }
+
+    // Keyboard pattern tests
+
+    #[Test]
+    public function keyboard_pattern_qwerty_is_flagged(): void
+    {
+        $result = PasswordStrength::check('qwerty123');
+        $this->assertContains('Avoid keyboard patterns.', $result->suggestions);
+    }
+
+    #[Test]
+    public function keyboard_pattern_detected_in_report(): void
+    {
+        $report = PasswordStrength::analyze('qwerty123');
+        $this->assertTrue($report->hasKeyboardPattern);
+    }
+
+    #[Test]
+    public function no_keyboard_pattern_for_random_password(): void
+    {
+        $report = PasswordStrength::analyze('xK9#mP2$');
+        $this->assertFalse($report->hasKeyboardPattern);
+    }
+
+    #[Test]
+    public function keyboard_pattern_reduces_score(): void
+    {
+        $withPattern = PasswordStrength::check('qwerty123!ABC');
+        $withoutPattern = PasswordStrength::check('xbmrvt123!ABC');
+        $this->assertLessThanOrEqual($withoutPattern->score, $withPattern->score);
+    }
+
+    #[Test]
+    public function keyboard_pattern_asdfgh_is_flagged(): void
+    {
+        $report = PasswordStrength::analyze('myasdfgh99!');
+        $this->assertTrue($report->hasKeyboardPattern);
+    }
+
+    #[Test]
+    public function keyboard_pattern_zxcvbn_is_flagged(): void
+    {
+        $report = PasswordStrength::analyze('myzxcvbn99!');
+        $this->assertTrue($report->hasKeyboardPattern);
+    }
+
+    // Custom dictionary tests
+
+    #[Test]
+    public function custom_dictionary_flags_matching_password(): void
+    {
+        PasswordStrength::addDictionary(['company', 'acme']);
+
+        $result = PasswordStrength::check('acmepassword');
+        $this->assertContains('Avoid dictionary words.', $result->suggestions);
+    }
+
+    #[Test]
+    public function custom_dictionary_reduces_score(): void
+    {
+        PasswordStrength::addDictionary(['company', 'acme']);
+
+        $withDict = PasswordStrength::check('acmepassword!1A');
+        PasswordStrength::clearDictionaries();
+        $withoutDict = PasswordStrength::check('acmepassword!1A');
+
+        $this->assertLessThanOrEqual($withoutDict->score, $withDict->score);
+    }
+
+    #[Test]
+    public function custom_dictionary_case_insensitive(): void
+    {
+        PasswordStrength::addDictionary(['ACME']);
+
+        $result = PasswordStrength::check('acmepassword');
+        $this->assertContains('Avoid dictionary words.', $result->suggestions);
+    }
+
+    #[Test]
+    public function clear_dictionaries_removes_all_words(): void
+    {
+        PasswordStrength::addDictionary(['company']);
+        PasswordStrength::clearDictionaries();
+
+        $result = PasswordStrength::check('companypass');
+        $this->assertNotContains('Avoid dictionary words.', $result->suggestions);
+    }
+
+    // Personal context tests
+
+    #[Test]
+    public function with_context_returns_pending_analysis(): void
+    {
+        $pending = PasswordStrength::withContext(['john']);
+        $this->assertInstanceOf(PendingAnalysis::class, $pending);
+    }
+
+    #[Test]
+    public function personal_context_flags_matching_password(): void
+    {
+        $report = PasswordStrength::withContext(['john', 'john@example.com'])
+            ->analyze('john2024!');
+
+        $this->assertTrue($report->hasPersonalContext);
+        $this->assertContains('Avoid using personal information in your password', $report->suggestions);
+    }
+
+    #[Test]
+    public function personal_context_reduces_score(): void
+    {
+        $withContext = PasswordStrength::withContext(['john'])
+            ->analyze('john2024!ABC#');
+
+        $withoutContext = PasswordStrength::analyze('john2024!ABC#');
+
+        $this->assertLessThanOrEqual($withoutContext->score, $withContext->score);
+    }
+
+    #[Test]
+    public function personal_context_ignores_short_values(): void
+    {
+        $report = PasswordStrength::withContext(['ab'])
+            ->analyze('xK9#mP2$ab');
+
+        $this->assertFalse($report->hasPersonalContext);
+    }
+
+    #[Test]
+    public function personal_context_case_insensitive(): void
+    {
+        $report = PasswordStrength::withContext(['John'])
+            ->analyze('john2024!');
+
+        $this->assertTrue($report->hasPersonalContext);
+    }
+
+    #[Test]
+    public function no_personal_context_for_unrelated_password(): void
+    {
+        $report = PasswordStrength::withContext(['john', 'john@example.com'])
+            ->analyze('xK9#mP2$rT5!');
+
+        $this->assertFalse($report->hasPersonalContext);
     }
 }
