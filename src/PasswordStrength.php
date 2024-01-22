@@ -251,22 +251,17 @@ final class PasswordStrength
         $lower = strtolower($password);
 
         foreach (self::KEYBOARD_PATTERNS as $pattern) {
-            if (strlen($pattern) < 4) {
-                continue;
-            }
-
             if (str_contains($lower, $pattern)) {
                 return true;
             }
 
             // Check substrings of longer patterns (min 4 chars)
             $patternLen = strlen($pattern);
-            if ($patternLen > 4) {
-                for ($i = 0; $i <= $patternLen - 4; $i++) {
-                    $sub = substr($pattern, $i, 4);
-                    if (str_contains($lower, $sub)) {
-                        return true;
-                    }
+
+            for ($i = 0; $i <= $patternLen - 4; $i++) {
+                $sub = substr($pattern, $i, 4);
+                if (str_contains($lower, $sub)) {
+                    return true;
                 }
             }
         }
