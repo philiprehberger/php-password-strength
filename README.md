@@ -1,13 +1,8 @@
 # PHP Password Strength
 
 [![Tests](https://github.com/philiprehberger/php-password-strength/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/php-password-strength/actions/workflows/tests.yml)
-[![Packagist Version](https://img.shields.io/packagist/v/philiprehberger/php-password-strength.svg)](https://packagist.org/packages/philiprehberger/php-password-strength)
-[![GitHub Release](https://img.shields.io/github/v/release/philiprehberger/php-password-strength)](https://github.com/philiprehberger/php-password-strength/releases)
-[![Last Updated](https://img.shields.io/github/last-commit/philiprehberger/php-password-strength)](https://github.com/philiprehberger/php-password-strength/commits/main)
-[![License](https://img.shields.io/github/license/philiprehberger/php-password-strength)](LICENSE)
-[![Bug Reports](https://img.shields.io/github/issues/philiprehberger/php-password-strength/bug)](https://github.com/philiprehberger/php-password-strength/issues?q=label%3Abug)
-[![Feature Requests](https://img.shields.io/github/issues/philiprehberger/php-password-strength/enhancement)](https://github.com/philiprehberger/php-password-strength/issues?q=label%3Aenhancement)
-[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/php-password-strength.svg)](https://packagist.org/packages/philiprehberger/php-password-strength)
+[![Last updated](https://img.shields.io/github/last-commit/philiprehberger/php-password-strength)](https://github.com/philiprehberger/php-password-strength/commits/main)
 
 Password strength validation with entropy calculation and common password detection.
 
@@ -206,8 +201,21 @@ vendor/bin/pint --test
 
 ## Support
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-philiprehberger-blue?logo=linkedin)](https://linkedin.com/in/philiprehberger)
-[![Packages](https://img.shields.io/badge/All_Packages-philiprehberger-purple?logo=github)](https://github.com/philiprehberger/packages)
+If you find this project useful:
+
+⭐ [Star the repo](https://github.com/philiprehberger/php-password-strength)
+
+🐛 [Report issues](https://github.com/philiprehberger/php-password-strength/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+
+💡 [Suggest features](https://github.com/philiprehberger/php-password-strength/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
+
+❤️ [Sponsor development](https://github.com/sponsors/philiprehberger)
+
+🌐 [All Open Source Projects](https://philiprehberger.com/open-source-packages)
+
+💻 [GitHub Profile](https://github.com/philiprehberger)
+
+🔗 [LinkedIn Profile](https://www.linkedin.com/in/philiprehberger)
 
 ## License
 
