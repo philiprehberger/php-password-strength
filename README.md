@@ -8,7 +8,7 @@ Password strength validation with entropy calculation and common password detect
 
 ## Requirements
 
-- PHP ^8.2
+- PHP 8.2+
 
 ## Installation
 
