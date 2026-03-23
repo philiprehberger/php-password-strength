@@ -56,6 +56,45 @@ if (PasswordStrength::isStrong('MyP@ssw0rd!2026', minScore: 4)) {
 }
 ```
 
+### Detailed analysis
+
+```php
+use PhilipRehberger\PasswordStrength\PasswordStrength;
+
+$report = PasswordStrength::analyze('MyP@ssw0rd!2026');
+
+echo $report->score;             // 0-4
+echo $report->level;             // "very weak", "weak", "fair", "strong", or "very strong"
+echo $report->length;            // Password length
+echo $report->hasLowercase;      // true
+echo $report->hasUppercase;      // true
+echo $report->hasDigits;         // true
+echo $report->hasSymbols;        // true
+echo $report->hasRepeatedChars;  // false
+echo $report->hasSequentialChars; // false
+```
+
+### Policy-based validation
+
+```php
+use PhilipRehberger\PasswordStrength\PasswordPolicy;
+use PhilipRehberger\PasswordStrength\PasswordStrength;
+
+$policy = (new PasswordPolicy)
+    ->minLength(10)
+    ->requireUppercase()
+    ->requireDigits()
+    ->requireSymbols()
+    ->minScore(3);
+
+// Using the policy directly
+$policy->check('MyP@ssw0rd!2026'); // true
+
+// Using the main class
+PasswordStrength::meetsPolicy('MyP@ssw0rd!2026', $policy); // true
+PasswordStrength::meetsPolicy('weak', $policy);             // false
+```
+
 ## API
 
 ### `PasswordStrength`
@@ -64,6 +103,8 @@ if (PasswordStrength::isStrong('MyP@ssw0rd!2026', minScore: 4)) {
 |---|---|
 | `PasswordStrength::check(string $password): StrengthResult` | Analyse a password and return a result |
 | `PasswordStrength::isStrong(string $password, int $minScore = 3): bool` | Returns `true` if the score meets the minimum |
+| `PasswordStrength::analyze(string $password): StrengthReport` | Return a detailed strength report with analysis flags |
+| `PasswordStrength::meetsPolicy(string $password, PasswordPolicy $policy): bool` | Check if a password satisfies a policy |
 
 ### `StrengthResult`
 
@@ -76,6 +117,31 @@ if (PasswordStrength::isStrong('MyP@ssw0rd!2026', minScore: 4)) {
 | `suggestions` | `array` | List of improvement suggestions |
 | `label(): string` | — | Human label: `very weak`, `weak`, `fair`, `strong`, `very strong` |
 | `toArray(): array` | — | Serialize to array |
+
+### `StrengthReport`
+
+| Property | Type | Description |
+|---|---|---|
+| `score` | `int` | Strength score from 0 to 4 |
+| `level` | `string` | Human-readable strength level |
+| `hasLowercase` | `bool` | Whether the password contains lowercase letters |
+| `hasUppercase` | `bool` | Whether the password contains uppercase letters |
+| `hasDigits` | `bool` | Whether the password contains digits |
+| `hasSymbols` | `bool` | Whether the password contains special characters |
+| `hasRepeatedChars` | `bool` | Whether the password has 3+ repeated characters in a row |
+| `hasSequentialChars` | `bool` | Whether the password has 3+ sequential characters |
+| `length` | `int` | Password length in characters |
+
+### `PasswordPolicy`
+
+| Method | Description |
+|---|---|
+| `minLength(int $length): self` | Set minimum password length |
+| `requireUppercase(): self` | Require at least one uppercase letter |
+| `requireDigits(): self` | Require at least one digit |
+| `requireSymbols(): self` | Require at least one special character |
+| `minScore(int $score): self` | Set minimum strength score (0-4) |
+| `check(string $password): bool` | Check if a password meets the policy |
 
 ### Score Meanings
 
