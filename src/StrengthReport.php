@@ -18,7 +18,10 @@ final readonly class StrengthReport
      * @param  bool  $hasSymbols  Whether the password contains special characters
      * @param  bool  $hasRepeatedChars  Whether the password contains repeated characters (3+ same in a row)
      * @param  bool  $hasSequentialChars  Whether the password contains sequential characters (3+ in a row)
+     * @param  bool  $hasKeyboardPattern  Whether the password contains keyboard patterns (QWERTY rows, etc.)
      * @param  int  $length  Password length in characters
+     * @param  bool  $hasPersonalContext  Whether the password contains personal context information
+     * @param  array<string>  $suggestions  Improvement suggestions
      */
     public function __construct(
         public int $score,
@@ -29,6 +32,9 @@ final readonly class StrengthReport
         public bool $hasSymbols,
         public bool $hasRepeatedChars,
         public bool $hasSequentialChars,
-        public int $length,
+        public bool $hasKeyboardPattern = false,
+        public int $length = 0,
+        public bool $hasPersonalContext = false,
+        public array $suggestions = [],
     ) {}
 }

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-27
+
+### Added
+- Keyboard pattern detection (QWERTY rows, number sequences)
+- Custom dictionary support via `PasswordStrength::addDictionary()`
+- Personal context checking via `PasswordStrength::withContext()`
+
 ## [1.1.0] - 2026-03-22
 
 ### Added

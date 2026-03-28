@@ -12,6 +12,21 @@ final class PasswordStrength
     /** @var array<string, int>|null */
     private static ?array $commonPasswords = null;
 
+    /** @var array<string> */
+    private static array $customDictionary = [];
+
+    private const KEYBOARD_PATTERNS = [
+        'qwerty',
+        'asdfgh',
+        'zxcvbn',
+        'qwertyuiop',
+        'asdfghjkl',
+        '123456',
+        '654321',
+        'qazwsx',
+        '1qaz2wsx',
+    ];
+
     /**
      * Analyze a password and return a strength result.
      */
@@ -21,10 +36,12 @@ final class PasswordStrength
         $entropy = self::calculateEntropy($password);
         $isCommon = self::isCommonPassword($password);
         $patterns = self::detectPatterns($password);
+        $hasKeyboardPattern = self::detectKeyboardPattern($password);
+        $hasDictionaryMatch = self::detectDictionaryMatch($password);
         $suggestions = [];
 
         // Calculate score (0-4)
-        $score = self::calculateScore($password, $entropy, $isCommon, $patterns);
+        $score = self::calculateScore($password, $entropy, $isCommon, $patterns, $hasKeyboardPattern, $hasDictionaryMatch);
 
         // Generate suggestions
         if ($length < 8) {
@@ -54,6 +71,12 @@ final class PasswordStrength
         if (in_array('repeated', $patterns, true)) {
             $suggestions[] = 'Avoid repeated characters (aaa, 111).';
         }
+        if ($hasKeyboardPattern) {
+            $suggestions[] = 'Avoid keyboard patterns.';
+        }
+        if ($hasDictionaryMatch) {
+            $suggestions[] = 'Avoid dictionary words.';
+        }
 
         return new StrengthResult(
             score: $score,
@@ -79,6 +102,7 @@ final class PasswordStrength
     {
         $result = self::check($password);
         $patterns = self::detectPatterns($password);
+        $hasKeyboardPattern = self::detectKeyboardPattern($password);
 
         return new StrengthReport(
             score: $result->score,
@@ -89,7 +113,9 @@ final class PasswordStrength
             hasSymbols: (bool) preg_match('/[^a-zA-Z0-9]/', $password),
             hasRepeatedChars: in_array('repeated', $patterns, true),
             hasSequentialChars: in_array('sequential', $patterns, true),
+            hasKeyboardPattern: $hasKeyboardPattern,
             length: $result->length,
+            suggestions: $result->suggestions,
         );
     }
 
@@ -99,6 +125,36 @@ final class PasswordStrength
     public static function meetsPolicy(string $password, PasswordPolicy $policy): bool
     {
         return $policy->check($password);
+    }
+
+    /**
+     * Add custom dictionary words to check against.
+     *
+     * @param  array<string>  $words
+     */
+    public static function addDictionary(array $words): void
+    {
+        foreach ($words as $word) {
+            self::$customDictionary[] = strtolower($word);
+        }
+    }
+
+    /**
+     * Clear all custom dictionaries.
+     */
+    public static function clearDictionaries(): void
+    {
+        self::$customDictionary = [];
+    }
+
+    /**
+     * Create a pending analysis with personal context.
+     *
+     * @param  array<string>  $context
+     */
+    public static function withContext(array $context): PendingAnalysis
+    {
+        return new PendingAnalysis($context);
     }
 
     /**
@@ -188,12 +244,69 @@ final class PasswordStrength
     }
 
     /**
+     * Detect keyboard patterns in the password.
+     */
+    private static function detectKeyboardPattern(string $password): bool
+    {
+        $lower = strtolower($password);
+
+        foreach (self::KEYBOARD_PATTERNS as $pattern) {
+            if (strlen($pattern) < 4) {
+                continue;
+            }
+
+            if (str_contains($lower, $pattern)) {
+                return true;
+            }
+
+            // Check substrings of longer patterns (min 4 chars)
+            $patternLen = strlen($pattern);
+            if ($patternLen > 4) {
+                for ($i = 0; $i <= $patternLen - 4; $i++) {
+                    $sub = substr($pattern, $i, 4);
+                    if (str_contains($lower, $sub)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the password matches any custom dictionary word.
+     */
+    private static function detectDictionaryMatch(string $password): bool
+    {
+        if (empty(self::$customDictionary)) {
+            return false;
+        }
+
+        $lower = strtolower($password);
+
+        foreach (self::$customDictionary as $word) {
+            if ($word !== '' && str_contains($lower, $word)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Calculate the overall score (0-4).
      *
      * @param  array<string>  $patterns
      */
-    private static function calculateScore(string $password, float $entropy, bool $isCommon, array $patterns): int
-    {
+    private static function calculateScore(
+        string $password,
+        float $entropy,
+        bool $isCommon,
+        array $patterns,
+        bool $hasKeyboardPattern = false,
+        bool $hasDictionaryMatch = false,
+    ): int {
         if (mb_strlen($password) === 0) {
             return 0;
         }
@@ -220,6 +333,16 @@ final class PasswordStrength
 
         // Penalty for patterns
         if (! empty($patterns)) {
+            $score = max(0, $score - 1);
+        }
+
+        // Penalty for keyboard patterns
+        if ($hasKeyboardPattern) {
+            $score = max(0, $score - 1);
+        }
+
+        // Penalty for dictionary matches
+        if ($hasDictionaryMatch) {
             $score = max(0, $score - 1);
         }
 
